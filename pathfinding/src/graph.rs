@@ -80,13 +80,7 @@ impl Graph {
         while !frontier.is_empty() {
             let target = frontier.pop_front().unwrap();
             self.graph[target.0][target.1] = Tile::Searched;
-            // Drawing graph on top of previous output
-            self.stdout.queue(cursor::MoveTo(0, 4))?;
-            self.stdout
-                .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?;
-            self.stdout
-                .write_all(format!("{}", self.as_str()).as_bytes())?;
-            self.stdout.flush().unwrap();
+            self.print()?;
             thread::sleep(time::Duration::from_millis(5));
             for neighbor in self.neighbors_of(target) {
                 if self.graph[neighbor.0][neighbor.1] == Tile::Empty {
@@ -116,7 +110,7 @@ impl Graph {
         })
     }
 
-    pub fn get_start_end(&self) -> ((usize, usize), (usize, usize)) {
+    fn get_start_end(&self) -> ((usize, usize), (usize, usize)) {
         let mut start = (0, 0);
         for (i, tile) in self.graph[0].iter().enumerate() {
             if *tile == Tile::Start {
@@ -134,6 +128,17 @@ impl Graph {
         (start, end)
     }
 
+    fn print(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        // Drawing graph on top of previous output
+        self.stdout.queue(cursor::MoveTo(0, 0))?;
+        self.stdout
+            .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?;
+        self.stdout
+            .write_all(format!("{}", self.as_str()).as_bytes())?;
+        self.stdout.flush().unwrap();
+        Ok(())
+    }
+
     pub fn print_path(
         &mut self,
         paths: HashMap<(usize, usize), (usize, usize)>,
@@ -145,12 +150,7 @@ impl Graph {
             current = *paths.get(&current).unwrap();
 
             // Drawing graph on top of previous output
-            self.stdout.queue(cursor::MoveTo(0, 4))?;
-            self.stdout
-                .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?;
-            self.stdout
-                .write_all(format!("{}", self.as_str()).as_bytes())?;
-            self.stdout.flush().unwrap();
+            self.print()?;
             thread::sleep(time::Duration::from_millis(100));
         }
         Ok(())
